@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  <mapper namespace="com.ssafy.musoonzup.applyHome.dao.ApplyLikeDao">
+  	<select id="selectAll" resultType="com.ssafy.musoonzup.applyHome.dto.response.ApplyLikeListResponseDto">
+  		SELECT al.idx, al.apply_idx, ah.house_name AS `applyName`, al.created_at, al.updated_at FROM `apply_like` al
+		JOIN `apply_home` ah ON al.apply_idx = ah.idx
+  		WHERE `member_account_idx`=#{memberAccountIdx}
+  	</select>
+  	
+  	<insert id="insert">
+  		INSERT INTO `apply_like`
+  		VALUE(DEFAULT, #{memberAccountIdx}, #{applyIdx}, DEFAULT, DEFAULT);
+  	</insert>
+  	
+  	<delete id="delete">
+  		DELETE FROM `apply_like`
+  		WHERE `member_account_idx`=#{memberAccountIdx} 
+  		AND `apply_idx`=#{applyIdx}
+  	</delete>
+  	
+  	<select id="selectByAIdxAndmIdx">
+  		SELECT COUNT(*) FROM `apply_like`
+  		WHERE `member_account_idx`=#{memberAccountIdx}
+  		AND `apply_idx`=#{applyIdx}
+  	</select>
+  	
+  	<select id="selectAllCnt">
+  		SELECT COUNT(idx) FROM `apply_like`
+  		WHERE `member_account_idx`=#{memberAccountIdx}
+  	</select>
+  </mapper>

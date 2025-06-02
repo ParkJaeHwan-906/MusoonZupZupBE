@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  <mapper namespace="com.ssafy.musoonzup.applyHome.dao.ApplyHomeCommentsMSDao">
+  	<select id="selectAllComments">
+  		SELECT ahms.*, ah.house_name FROM `apply_home_comments_ms` ahms
+  		JOIN `apply_home` ah ON ahms.apply_idx = ah.idx
+  		WHERE `member_account_idx`=#{memberAccountIdx}
+  		<if test="applyIdx!=null">  		
+	  		AND `apply_idx`=#{applyIdx}
+  		</if>
+  		ORDER BY created_at DESC;
+  	</select>
+  	
+  	<insert id="insert">
+  		INSERT INTO `apply_home_comments_ms` VALUE
+  		(DEFAULT, #{applyIdx}, #{memberAccountIdx}, #{request}, #{comment}, DEFAULT, DEFAULT);
+  	</insert>
+  </mapper>

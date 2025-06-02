@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ssafy.musoonzup.member.dao.RoleDao">
+
+  <select id="findNameByIdx" resultType="String">
+    SELECT name
+    FROM roles
+    WHERE idx = #{idx}
+  </select>
+  <select id="findIdxByName" resultType="Long">
+    SELECT idx
+    FROM roles
+    WHERE name = #{name}
+  </select>
+</mapper>

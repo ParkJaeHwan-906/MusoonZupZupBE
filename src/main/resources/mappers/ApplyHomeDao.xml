@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ssafy.musoonzup.applyHome.dao.ApplyHomeDao">
+	<select id="selectAll">
+		SELECT a_h.*, COUNT(a_l.idx) AS `likeCnt` FROM apply_home a_h
+		LEFT JOIN apply_like a_l ON a_l.apply_idx = a_h.idx
+		<where>
+			<if test="role!='ADMIN' and role!='MASTER'">			
+				a_h.`blind` = 0
+			</if>
+			<if test="searchCondition.key != null and searchCondition.value != null">
+				AND a_h.${searchCondition.key} LIKE CONCAT('%', #{searchCondition.value}, '%')
+			</if>
+		</where>
+		GROUP BY a_h.idx
+		<if test="searchCondition.sortKey != null">
+			ORDER BY a_h.${searchCondition.sortKey} ${searchCondition.sortValue}
+		</if>
+		LIMIT #{searchCondition.size}
+    	OFFSET #{searchCondition.offset}
+	</select>
+	
+	<select id="selectTop3">
+		SELECT a_h.*, COUNT(a_l.idx) AS `likeCnt` FROM apply_home a_h
+		LEFT JOIN apply_like a_l ON a_l.apply_idx = a_h.idx
+		<where>
+			a_h.`blind` = 0
+		</where>
+		GROUP BY a_h.idx
+		<if test="sortKey != null">
+			ORDER BY a_h.${sortKey} DESC
+		</if>
+		limit 3;
+	</select>
+
+	<select id="selectByIdx" resultType="com.ssafy.musoonzup.applyHome.dto.ApplyHomeDto">
+		SELECT ah.idx, ah.house_manage_no, ah.pblanc_no, ah.views, ah.blind, ah.house_name, ah.house_code, ah.zip_code, ah.sido_code, ah.house_address,
+		ah.geo, ah.suply_count, ah.suply_price, ah.pblanc_date, ah.apply_start_date, ah.apply_end_date, ah.apply_announce_date, ah.business_entity,
+		CASE 
+    WHEN ah.business_tel LIKE '010%' AND LENGTH(ah.business_tel) = 11 THEN 
+      CONCAT(
+        SUBSTRING(ah.business_tel, 1, 3), '-', 
+        SUBSTRING(ah.business_tel, 4, 4), '-', 
+        SUBSTRING(ah.business_tel, 8, 4)
+      )
+    WHEN ah.business_tel LIKE '02%' AND LENGTH(ah.business_tel) = 10 THEN
+      CONCAT(
+        SUBSTRING(ah.business_tel, 1, 2), '-', 
+        SUBSTRING(ah.business_tel, 3, 4), '-', 
+        SUBSTRING(ah.business_tel, 7, 4)
+      )
+	WHEN ah.business_tel LIKE '02%' AND LENGTH(ah.business_tel) = 9 THEN
+      CONCAT(
+        SUBSTRING(ah.business_tel, 1, 2), '-', 
+        SUBSTRING(ah.business_tel, 3, 3), '-', 
+        SUBSTRING(ah.business_tel, 6)
+      )
+    WHEN ah.business_tel LIKE '0%' AND LENGTH(ah.business_tel) = 10 THEN
+      CONCAT(
+        SUBSTRING(ah.business_tel, 1, 3), '-', 
+        SUBSTRING(ah.business_tel, 4, 3), '-', 
+        SUBSTRING(ah.business_tel, 7, 4)
+      )
+    WHEN ah.business_tel LIKE '0%' AND LENGTH(ah.business_tel) = 11 THEN
+      CONCAT(
+        SUBSTRING(ah.business_tel, 1, 3), '-', 
+        SUBSTRING(ah.business_tel, 4, 4), '-', 
+        SUBSTRING(ah.business_tel, 8, 4)
+      )
+    ELSE CONCAT(SUBSTRING(business_tel, 1, 4), '-', SUBSTRING(business_tel, 5))
+  END AS 'business_tel',
+   		ah.applyhome_url, ah.created_at, ah.updated_at
+		, COUNT(a_l.idx) AS `likeCnt` FROM apply_home ah
+		LEFT JOIN apply_like a_l ON a_l.apply_idx = ah.idx
+		WHERE ah.idx=#{idx}
+		GROUP BY ah.idx;
+	</select>
+	
+	<update id="updatedViews">
+		UPDATE `apply_home` SET `views`= `views`+1
+		WHERE idx=#{idx}
+		AND `blind` = 0
+	</update>
+	
+	<update id="updateGeo">
+		UPDATE apply_home 
+		SET 
+		geo=POINT(#{geo.x}, #{geo.y}),
+		`house_address`=#{houseAddress},
+		`updated_at`=DEFAULT
+		WHERE idx = #{idx}
+	</update>
+	
+	<update id="blindPblanc">
+		UPDATE apply_home SET 
+		<if test="blind==true">	
+	  		`blind`=1,
+  		</if>
+  		<if test="blind==false">	
+	  		`blind`=0,
+  		</if>
+		`updated_at`=DEFAULT
+		WHERE idx = #{idx}
+	</update>
+	
+	<select id="selectAllPblancCnt">
+		SELECT COUNT(*) FROM apply_home a_h
+		<where>
+			<if test="role!='ADMIN' and role!='MASTER'">			
+				a_h.`blind` = 0
+			</if>
+			<if test="searchCondition.key != null and searchCondition.value != null">
+				AND a_h.${searchCondition.key} LIKE CONCAT('%', #{searchCondition.value}, '%')
+			</if>
+		</where>
+	</select>
+	
+	<resultMap type="com.ssafy.musoonzup.applyHome.dto.ApplyHomeDto" id="applyHomeMap">
+		<id column="idx" property="idx"/>
+		<result column="house_manage_no" property="houseManageNo"/>
+		<result column="pblanc_no" property="pblancNo"/>
+		<result column="views" property="views"/>
+		<result column="blind" property="blind"/>
+		<result column="house_name" property="houseName"/>
+		<result column="house_code" property="houseCode"/>
+		<result column="zip_code" property="zipCode"/>
+		<result column="sido_code" property="sidoCode"/>
+		<result column="house_address" property="houseAddress"/>
+		<result column="suply_count" property="suplyCount"/>
+		<result column="suply_price" property="suplyPrice"/>
+		<result column="pblanc_date" property="pblancDate"/>
+		<result column="apply_start_date" property="applyStartDate"/>
+		<result column="apply_end_date" property="applyEndDate"/>
+		<result column="apply_announce_date" property="applyAnnounceDate"/>
+		<result column="business_entity" property="businessEntity"/>
+		<result column="business_tel" property="businessTel"/>
+		<result column="applyhome_url" property="applyhomeUrl"/>
+		<result column="created_at" property="createdAt"/>
+		<result column="updated_at" property="updatedAt"/>
+	</resultMap>
+</mapper>

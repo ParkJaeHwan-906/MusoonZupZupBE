@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  <mapper namespace="com.ssafy.musoonzup.notice.dao.NoticeCommentDao">
+  	<insert id="insert">
+  		INSERT INTO `notice_comments`(member_account_idx, notice_idx, comment) 
+  		VALUE (#{memberAccountIdx}, #{noticeIdx}, #{comment}); 
+  	</insert>
+  	
+  	<select id="selectByIdx" resultType="com.ssafy.musoonzup.notice.dto.response.NoticeCommentResponseDto">
+  		SELECT nc.`idx` AS 'idx', 
+		nc.`notice_idx` AS 'noticeIdx', 
+		nc.`member_account_idx` AS 'memberAccountIdx', 
+		ma.`id` AS 'memberId',
+		r.name AS 'role',
+		nc.`comment` AS 'comment',
+		nc.`blind` AS 'blind',
+		nc.`created_at` AS 'createdAt',
+		nc.`updated_at` AS 'updatedAt' 
+		FROM notice_comments nc
+		JOIN notice n ON n.idx = nc.notice_idx
+		JOIN members_account ma ON ma.idx = nc.member_account_idx
+		JOIN roles r ON ma.role = r.idx
+		<where>
+			nc.notice_idx = #{noticeIdx}
+			<if test="role!='ADMIN' and role!='MASTER'">
+				AND nc.blind = 0
+			</if>
+			AND nc.`delete`=0
+		</where>
+		LIMIT #{searchCondition.size}
+    	OFFSET #{searchCondition.offset}
+  	</select>
+  	
+  	<select id="selectByIdxCnt">
+  		SELECT COUNT(*)
+		FROM notice_comments nc
+		<where>
+			nc.notice_idx = #{noticeIdx}
+			<if test="role!='ADMIN' and role!='MASTER'">
+				AND nc.blind = 0
+			</if>
+			AND nc.`delete`=0
+		</where>
+  	</select>
+  	
+  	<update id="delete">
+  		UPDATE `notice_comments` SET
+  		`delete` = 1,
+  		`updated_at` = DEFAULT
+  		WHERE idx=#{idx}
+  		AND member_account_idx=#{memberAccountIdx}
+  	</update>
+  	
+  	<update id="update">
+  		UPDATE `notice_comments` SET
+  		`comment` = #{req.comment},
+  		`updated_at` = DEFAULT
+  		WHERE idx=#{idx}
+  		AND member_account_idx=#{req.memberAccountIdx}
+  		AND `blind` = 0 AND `delete` = 0
+  	</update>
+  	
+  	<update id="blind">
+  		UPDATE `notice_comments` SET
+  		<if test="blind==true">	
+	  		`blind`=1,
+  		</if>
+  		<if test="blind==false">	
+	  		`blind`=0,
+  		</if> 
+		`updated_at` = DEFAULT
+		WHERE `idx`=#{idx}
+		AND `delete`=0
+		AND `member_account_idx`=#{memberAccountIdx}
+  	</update>
+  </mapper>

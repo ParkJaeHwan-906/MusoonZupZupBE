@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  <mapper namespace="com.ssafy.musoonzup.community.dao.CommunityDao">
+  	<insert id="insert">
+  		INSERT INTO community VALUE (
+  			DEFAULT,
+  			#{memberAccountIdx},
+  			#{title},
+  			#{content},
+  			DEFAULT,
+  			DEFAULT,
+  			DEFAULT,
+  			DEFAULT,
+  			DEFAULT
+  		);
+  	</insert>
+  	
+  	<update id="update">
+  		UPDATE community SET
+  			`title`=#{title},
+  			`content`=#{content},
+  			`updated_at`=DEFAULT
+  			WHERE idx=#{idx}
+  			AND `blind` = 0
+			AND `delete`= 0;
+  	</update>
+  	
+  	<update id="delete">
+  		UPDATE community SET 
+  		`delete`=1,
+  		`updated_at`=DEFAULT
+		WHERE idx=#{idx}
+		AND `delete`= 0
+		AND `blind`=0;
+  	</update>
+  	
+  	<update id="blind">
+  		UPDATE community SET 
+  		<if test="blind==true">	
+	  		`blind`=1,
+  		</if>
+  		<if test="blind==false">	
+	  		`blind`=0,
+  		</if>
+  		`updated_at`=DEFAULT
+  		WHERE idx=#{idx}
+		AND `delete`= 0;
+  	</update>
+  	
+  	<select id="selectByIdx" resultType="com.ssafy.musoonzup.community.dto.response.CommunityDetail">
+  		SELECT 
+		c.idx,
+		c.member_account_idx,
+		m_a.id `memberId`, 
+		c.title, 
+		c.content, 
+		c.views,
+		c.blind,
+		c.created_at, 
+		c.updated_at
+		FROM community c
+		JOIN members_account m_a ON m_a.idx = c.member_account_idx
+		WHERE c.idx=#{idx}
+		AND c.`delete`= 0;
+  	</select>
+  	
+  	<select id="selectAll" resultType="com.ssafy.musoonzup.community.dto.response.CommunityList">
+  		SELECT 
+		    c.idx AS `idx`, 
+		    m_a.id AS `memberId`, 
+		    c.title AS `title`,
+		    c.content AS `content`,
+		    c.views AS `views`,
+		    c.blind AS `blind`,
+		    COALESCE(cld.like_count, 0) AS `like`,
+		    COALESCE(cld.dislike_count, 0) AS `disLike`,
+		    COALESCE(comment.commentCnt, 0) AS `commentCnt`,
+		    c.created_at AS `created_at`
+		FROM community c
+		JOIN members_account m_a ON m_a.idx = c.member_account_idx
+		LEFT JOIN (
+		    SELECT 
+		        community_idx,
+		        SUM(CASE WHEN `like` = 1 THEN 1 ELSE 0 END) AS like_count,
+		        SUM(CASE WHEN `like` = 0 THEN 1 ELSE 0 END) AS dislike_count
+		    FROM community_like_dislike
+		    GROUP BY community_idx
+		) cld ON cld.community_idx = c.idx
+		LEFT JOIN (
+		    SELECT community_idx, COUNT(*) AS commentCnt
+		    FROM community_comments
+		    WHERE `blind`=0 AND `delete`=0
+		    GROUP BY community_idx
+		) comment ON comment.community_idx = c.idx
+		<where>
+			c.`delete` = 0
+			<if test="role!='ADMIN' and role!='MASTER'">
+				AND c.`blind` = 0
+			</if>
+			<if test="searchCondition.key != null and searchCondition.value != null">
+				AND ${searchCondition.key} LIKE CONCAT('%', #{searchCondition.value}, '%')
+			</if>
+		</where>
+		GROUP BY c.idx
+		<if test="searchCondition.sortKey != null">
+			ORDER BY ${searchCondition.sortKey} ${searchCondition.sortValue}
+		</if>
+		LIMIT #{searchCondition.size}
+    	OFFSET #{searchCondition.offset}
+  	</select>
+  	
+  	<update id="updateViews">
+  		UPDATE community SET 
+  		`views`=`views`+1
+		WHERE idx=#{idx}
+		AND `blind` = 0
+		AND `delete`= 0;
+  	</update>
+  	
+  	<select id="selectAllCnt">
+  		SELECT COUNT(c.idx) 
+  		FROM community c
+		<where>
+			c.`delete` = 0
+			<if test="role!='ADMIN' and role!='MASTER'">
+				AND c.`blind` = 0
+			</if>
+			<if test="searchCondition.key != null and searchCondition.value != null">
+				AND c.${searchCondition.key} LIKE CONCAT('%', #{searchCondition.value}, '%')
+			</if>
+		</where>
+  	</select>
+  	
+  	<select id="selectAllByMemberAccountIdx" resultType="com.ssafy.musoonzup.community.dto.response.CommunityList">
+  		SELECT 
+		    c.idx AS `idx`, 
+		    m_a.id AS `memberId`, 
+		    c.title AS `title`,
+		    c.content AS `content`,
+		    c.views AS `views`,
+		    COALESCE(cld.like_count, 0) AS `like`,
+		    COALESCE(cld.dislike_count, 0) AS `disLike`,
+		    COALESCE(comment.commentCnt, 0) AS `commentCnt`,
+		    c.created_at AS `created_at`
+		FROM community c
+		JOIN members_account m_a ON m_a.idx = c.member_account_idx
+		LEFT JOIN (
+		    SELECT 
+		        community_idx,
+		        SUM(CASE WHEN `like` = 1 THEN 1 ELSE 0 END) AS like_count,
+		        SUM(CASE WHEN `like` = 0 THEN 1 ELSE 0 END) AS dislike_count
+		    FROM community_like_dislike
+		    GROUP BY community_idx
+		) cld ON cld.community_idx = c.idx
+		LEFT JOIN (
+		    SELECT community_idx, COUNT(*) AS commentCnt
+		    FROM community_comments
+		    WHERE `blind`=0 AND `delete`=0
+		    GROUP BY community_idx
+		) comment ON comment.community_idx = c.idx
+		<where>
+			c.`blind` = 0 AND c.`delete` = 0
+			AND c.member_account_idx = #{memberAccountIdx}
+			<if test="searchCondition.key != null and searchCondition.value != null">
+				AND ${searchCondition.key} LIKE CONCAT('%', #{searchCondition.value}, '%')
+			</if>
+		</where>
+		GROUP BY c.idx
+		<if test="searchCondition.sortKey != null">
+			ORDER BY ${searchCondition.sortKey} ${searchCondition.sortValue}
+		</if>
+		LIMIT #{searchCondition.size}
+    	OFFSET #{searchCondition.offset}
+  	</select>
+  	
+  	<select id="selectAllByMemberAccountIdxCnt">
+  		SELECT COUNT(c.idx) 
+  		FROM community c
+		<where>
+			c.`blind` = 0 AND c.`delete` = 0
+			AND c.member_account_idx = #{memberAccountIdx}
+			<if test="searchCondition.key != null and searchCondition.value != null">
+				AND c.${searchCondition.key} LIKE CONCAT('%', #{searchCondition.value}, '%')
+			</if>
+		</where>
+  	</select>
+  </mapper>

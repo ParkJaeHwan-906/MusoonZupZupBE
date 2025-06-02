@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  <mapper namespace="com.ssafy.musoonzup.notice.dao.NoticeDao">
+  	<insert id="insert">
+  		INSERT INTO `notice` VALUE (
+  			DEFAULT,
+  			#{memberAccountIdx},
+  			#{request.title},
+  			#{request.content},
+  			DEFAULT,
+  			DEFAULT,
+  			DEFAULT,
+  			DEFAULT,
+  			DEFAULT
+  		);
+  	</insert>
+  	
+  	<update id="updateViews">
+  		UPDATE `notice` SET
+  			`views` = `views`+1
+  			WHERE idx=#{request.idx}
+  			AND `blind` = 0
+			AND `delete`= 0;
+  	</update>
+  	
+  	<update id="update">
+  		UPDATE `notice` SET
+  			`title`=#{request.title},
+  			`content`=#{request.content},
+  			`member_account_idx`=#{memberAccountIdx},
+  			`updated_at`=DEFAULT
+  			WHERE idx=#{request.idx}
+  			AND `blind` = 0
+			AND `delete`= 0;
+  	</update>
+  	
+  	<select id="selectAll" resultType="com.ssafy.musoonzup.notice.dto.response.NoticeDetailResponseDto">
+  		SELECT 
+		    n.idx AS `idx`, 
+		    m_a.id AS `memberId`, 
+		    n.title AS `title`,
+		    n.content AS `content`,
+		    n.views AS `views`,
+		    n.blind AS `blind`,
+		    COALESCE(comment.commentCnt, 0) AS `commentCnt`,
+		    n.created_at AS `createdAt`,
+            n.updated_at AS 'updatedAt'
+		FROM notice n
+		JOIN members_account m_a ON m_a.idx = n.member_account_idx
+		LEFT JOIN (
+		    SELECT notice_idx, COUNT(*) AS commentCnt
+		    FROM notice_comments
+		    -- WHERE `blind`=0 AND `delete`=0
+		    GROUP BY notice_idx
+		) comment ON comment.notice_idx = n.idx
+		<where>
+			n.`delete` = 0
+			<if test="role != 'ADMIN' and role != 'MASTER'">
+				AND n.`blind` = 0
+			</if>
+			<if test="searchCondition_TMP.key != null and searchCondition_TMP.value != null">
+				AND ${searchCondition_TMP.key} LIKE CONCAT('%', #{searchCondition_TMP.value}, '%')
+			</if>
+		</where>
+		GROUP BY n.idx
+		<if test="searchCondition_TMP.sortKey != null">
+			ORDER BY ${searchCondition_TMP.sortKey} ${searchCondition_TMP.sortValue}
+		</if>
+		LIMIT #{searchCondition_TMP.size}
+    	OFFSET #{searchCondition_TMP.offset}
+  	</select>
+  	
+  	<select id="selectAllCnt">
+  		SELECT 
+		    COUNT(*)
+		FROM notice n
+		<where>
+			n.`delete` = 0
+			<if test="role != 'ADMIN' and role != 'MASTER'">
+				AND n.`blind` = 0
+			</if>
+			<if test="searchCondition_TMP.key != null and searchCondition_TMP.value != null">
+				AND ${searchCondition_TMP.key} LIKE CONCAT('%', #{searchCondition_TMP.value}, '%')
+			</if>
+		</where>
+  	</select>
+  	
+  	<select id="selectByIdx" resultType="com.ssafy.musoonzup.notice.dto.response.NoticeDetailResponseDto">
+  		SELECT n.idx, n.member_account_idx, n.title, n.content, n.views, n.blind, n.created_at, n.updated_at, ma.id AS 'memberId' FROM notice n
+		JOIN `members_account` ma ON ma.idx = n.`member_account_idx`
+		WHERE n.idx=#{idx}
+		AND n.`delete`=0;
+  	</select>
+  
+  	<update id="delete">
+  		UPDATE `notice` SET 
+		`delete`=1,
+		`member_account_idx`=#{memberAccountIdx},
+		`updated_at` = DEFAULT
+		WHERE `idx`=#{idx}
+		AND `blind`=0;
+  	</update>
+  	
+  	<update id="blind">
+  		UPDATE `notice` SET
+  		<if test="blind==true">	
+	  		`blind`=1,
+  		</if>
+  		<if test="blind==false">	
+	  		`blind`=0,
+  		</if> 
+		`member_account_idx`=#{memberAccountIdx},
+		`updated_at` = DEFAULT
+		WHERE `idx`=#{idx}
+		AND `delete`=0;
+  	</update>
+  </mapper>

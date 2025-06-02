@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  <mapper namespace="com.ssafy.musoonzup.community.dao.CommunityLike_DisLikeDao">
+  	<select id="checked">
+  		SELECT `like` FROM `community_like_dislike`
+  		WHERE `member_account_idx`=#{memberAccountIdx}
+  		AND `community_idx`=#{communityIdx}
+  	</select>
+
+  	<insert id="registLikeOrDisLike">
+  		INSERT INTO `community_like_dislike` VALUE
+  		(DEFAULT, #{memberAccountIdx}, #{communityIdx}, #{likeFlag}, DEFAULT, DEFAULT);
+  	</insert>
+
+  	<delete id="cancelLikeOrDisLike">
+  		DELETE FROM `community_like_dislike`
+  		WHERE `member_account_idx`=#{memberAccountIdx}
+  		AND `community_idx`=#{communityIdx}
+  	</delete>
+  	
+  	<select id="cntLikeDisLikeByIdx" resultType="com.ssafy.musoonzup.community.dto.response.CommunityLikeDisLikeResponseDto">
+  		SELECT 
+		COALESCE(SUM(CASE WHEN cld.`like` = 1 THEN 1 ELSE 0 END), 0) AS `like`,
+		COALESCE(SUM(CASE WHEN cld.`like` = 0 THEN 1 ELSE 0 END), 0) AS `disLike`
+		FROM community c
+		LEFT JOIN community_like_dislike cld ON cld.community_idx = c.idx
+		WHERE c.idx=#{communityIdx}
+		AND c.`blind` = 0
+		AND c.`delete`= 0;
+  	</select>
+  </mapper>

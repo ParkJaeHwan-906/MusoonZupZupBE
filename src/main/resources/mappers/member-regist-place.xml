@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  <mapper namespace="com.ssafy.musoonzup.member.dao.MemberRegistPlaceDao">
+  <insert id="insert">
+  	INSERT INTO `member_regist_place` VALUE (
+  		DEFAULT,
+  		#{memberAccountIdx},
+  		#{alias},
+  		#{address},
+  		#{detail},
+  		POINT(#{geo.x}, #{geo.y}),
+  		DEFAULT,
+  		DEFAULT,
+  		DEFAULT
+  	);
+  </insert>
+  
+  <select id="countRegistPlace">
+  	SELECT COUNT(*) FROM `member_regist_place`
+  	WHERE member_account_idx=#{memberAccountIdx}
+  	AND `delete`=0;
+  </select>
+  
+  <update id="delete">
+  	UPDATE `member_regist_place` SET `delete`=1
+  	WHERE idx=#{idx}
+  	AND member_account_idx=#{memberAccountIdx}
+  	AND `delete` = 0;
+  </update>
+  
+  <select id="selectByMemeberAccountIdx">
+  	SELECT 
+		mrp.idx AS `idx`,
+		mrp.member_account_idx AS `memberAccountIdx`,
+		ma.id AS `memberId`,
+		mrp.alias AS `alias`,
+		CONCAT(mrp.address,' ',IFNULL(mrp.detail,'')) AS `address`,
+		ST_X(mrp.geo) AS `x`,
+		ST_Y(mrp.geo) AS `y`
+	FROM `member_regist_place` mrp
+	JOIN `members_account` ma ON ma.idx = mrp.member_account_idx
+	WHERE mrp.`delete` = 0;
+  </select>
+  </mapper>

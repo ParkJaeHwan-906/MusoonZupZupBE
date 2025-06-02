@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  <mapper namespace="com.ssafy.musoonzup.community.dao.CommunityCommentDao">
+  	<insert id="insert">
+  		INSERT INTO community_comments VALUE(
+			DEFAULT,
+		    #{memberAccountIdx},
+		    #{communityIdx},
+		    #{comment},
+		    DEFAULT,
+		    DEFAULT,
+		    DEFAULT,
+		    DEFAULT
+		);
+  	</insert>
+  	
+  	<update id="update">
+  		UPDATE community_comments SET
+  		`comment`=#{comment},
+  		`updated_at`=DEFAULT
+  		WHERE idx=#{idx}
+  		AND `blind` = 0 AND `delete` = 0;
+  	</update>
+  	
+  	<update id="delete">
+  		UPDATE community_comments SET
+  		`delete`=1,
+  		`updated_at`=DEFAULT
+  		WHERE idx=#{idx}
+  		AND `blind` = 0 AND `delete` = 0;
+  	</update>
+  	
+  	<update id="blind">
+  		UPDATE community_comments SET 
+  		<if test="blind==true">	
+	  		`blind`=1,
+  		</if>
+  		<if test="blind==false">	
+	  		`blind`=0,
+  		</if>
+  		`updated_at`=DEFAULT
+  		WHERE idx=#{idx}
+  		AND `delete` = 0;
+  	</update>
+  	
+  	<select id="selectAllByIdx" resultType="com.ssafy.musoonzup.community.dto.response.CommunityCommentList">
+  		SELECT c_c.idx, c_c.member_account_idx, m_a.id AS `memberId`, c_c.community_idx AS 'communityIdx', r.name AS 'role', c_c.blind, c_c.comment, c_c.created_at FROM community_comments c_c
+		JOIN members_account m_a ON m_a.idx = c_c.member_account_idx
+        JOIN roles r ON r.idx = m_a.role
+		WHERE c_c.community_idx = #{idx}
+		<if test="role!='ADMIN' and role!='MASTER'">
+			AND c_c.`blind` = 0 
+		</if>
+		AND c_c.`delete` = 0
+		LIMIT #{searchCondition.size}
+    	OFFSET #{searchCondition.offset};
+  	</select>
+  	
+  	<select id="selectAllByIdxCnt">
+  		SELECT COUNT(c_c.idx) FROM community_comments c_c
+		WHERE c_c.community_idx = #{idx}
+		<if test="role!='ADMIN' and role!='MASTER'">
+			AND c_c.`blind` = 0 
+		</if>
+		AND c_c.`delete` = 0
+  	</select>
+  	
+  	<select id="selectByIdx" resultType="com.ssafy.musoonzup.community.dto.CommunityComment">
+  		SELECT cc.*, ma.id AS 'memberId' FROM `community_comments`cc
+		JOIN `members_account` ma ON ma.idx = cc.member_account_idx
+  		WHERE cc.idx=#{idx}
+  		AND `delete`=0
+  		AND `blind`=0;
+  	</select>
+  	
+  </mapper>

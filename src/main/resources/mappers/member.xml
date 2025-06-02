@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ssafy.musoonzup.member.dao.MemberDao">
+  <insert id="insert" parameterType="com.ssafy.musoonzup.member.dto.MemberDto" useGeneratedKeys="true" keyProperty="idx">
+    INSERT INTO members (name, email, phone, gender, birth_date, created_at, updated_at)
+    VALUES (#{name}, #{email}, #{phone}, #{gender}, #{birthDate}, NOW(), NOW())
+  </insert>
+
+  <select id="findByIdx" resultType="com.ssafy.musoonzup.member.dto.MemberDto">
+    SELECT idx, name, email, gender, created_at AS createdAt, updated_at AS updatedAt
+    FROM members
+    WHERE idx = #{idx}
+  </select>
+</mapper>

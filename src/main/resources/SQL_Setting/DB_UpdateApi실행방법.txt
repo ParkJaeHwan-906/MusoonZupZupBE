@@ -1,0 +1,12 @@
+사전 작업 
+src/main/resources/SQL Setting 내부의 Schema.sql, InsertBasicInfo.sql 순으로 SQL 을 실행시켜 DB 테이블을 생성한다.
+
+Data 채우기
+[옵션 1]
+Dump.sql 파일을 실행한다.
+[옵션 2]
+1. 압출을 푼다.
+2. VSCode 를 활용해 프로젝트를 연다
+2-1. npm i 키워드를 사용해 node module 을 다운로드 받는다.
+3. node server.js 명령어를 사용해 프로젝트를 실행한다.
+4. http://localhost:3000/api/open/call/update url 로 접속하여 DB 데이터를 생성한다.

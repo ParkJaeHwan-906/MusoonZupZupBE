@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  <mapper namespace="com.ssafy.musoonzup.applyHome.dao.ApplyHomeCommentsDao">
+  	<select id="selectByApplyIdx">
+  		SELECT * FROM `apply_home_comments`
+  		WHERE apply_idx=#{applyIdx}
+  		AND created_at >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+  		ORDER BY created_at DESC
+  		LIMIT 1;
+  	</select>
+  	
+  	<insert id="insert">
+  		INSERT INTO `apply_home_comments`
+  		VALUE(DEFAULT, #{applyIdx}, #{comment}, DEFAULT, DEFAULT);
+  	</insert>
+  </mapper>

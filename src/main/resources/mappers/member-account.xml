@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ssafy.musoonzup.member.dao.MemberAccountDao">
+
+  <insert id="insert" parameterType="com.ssafy.musoonzup.member.dto.MemberAccountDto">
+    INSERT INTO members_account (member_idx, id, pw, role, ban, created_at, updated_at)
+    VALUES (#{memberIdx}, #{id}, #{pw}, #{role}, 0, NOW(), NOW())
+  </insert>
+
+  <select id="countById" resultType="int">
+    SELECT COUNT(*)
+    FROM members_account
+    WHERE id = #{id}
+  </select>
+  <select id="findById" resultType="com.ssafy.musoonzup.member.dto.MemberAccountDto">
+    SELECT
+    idx,
+    id,
+    pw,
+    role,
+    ban,
+    member_idx AS memberIdx
+    FROM members_account
+    WHERE id = #{id}
+  </select>
+
+  <select id="findByIdNameEmail" resultType="com.ssafy.musoonzup.member.dto.MemberAccountDto">
+    SELECT ma.*
+    FROM members_account ma
+    JOIN members m ON ma.member_idx = m.idx
+    WHERE ma.id = #{id}
+    AND m.name = #{name}
+    AND m.email = #{email}
+  </select>
+
+  <update id="updatePasswordById">
+    UPDATE members_account
+    SET pw = #{pw}, updated_at = NOW()
+    WHERE id = #{id}
+  </update>
+
+  <select id="findByIdx" resultType="com.ssafy.musoonzup.member.dto.MemberAccountDto">
+    select *
+    from members_account
+    where idx=#{idx}
+  </select>
+
+  <select id="findIdByMemberIdx" resultType="String">
+    select id
+    from members_account
+    where member_idx=#{memberIdx}
+  </select>
+
+  <select id="findByMemberIdx" resultType="com.ssafy.musoonzup.member.dto.MemberAccountDto">
+    select *
+    from members_account
+    where member_idx=#{memberIdx}
+  </select>
+
+  <update id="updateRole">
+    UPDATE members_account
+    SET role = #{role}, updated_at = NOW()
+    WHERE idx = #{idx}
+  </update>
+
+  <select id="findAllWithAccount" resultType="com.ssafy.musoonzup.admin.dto.MemberWithAccountDto">
+    SELECT
+    m.idx AS memberIdx,
+    a.id,
+    m.email,
+    m.name,
+    r.name AS role,
+    CASE WHEN m.gender = 0 THEN '남성'
+    WHEN m.gender = 1 THEN '여성'
+    ELSE '기타' END AS gender,
+    CASE WHEN a.ban = 1 THEN true ELSE false END AS isBanned,
+    m.created_at
+    FROM members m
+    JOIN members_account a ON m.idx = a.member_idx
+    JOIN roles r ON a.role = r.idx
+
+    <where>
+      <if test="sc.key != null and sc.value != null">
+        <choose>
+          <when test='"id".equals(sc.key)'>
+            a.id LIKE CONCAT('%', #{sc.value}, '%')
+          </when>
+          <when test='"role".equals(sc.key)'>
+            r.name = #{sc.value}
+          </when>
+          <when test="sc.key == 'email'">
+            m.email LIKE CONCAT('%', #{sc.value}, '%')
+          </when>
+          <when test="sc.key == 'name'">
+            m.name LIKE CONCAT('%', #{sc.value}, '%')
+          </when>
+        </choose>
+      </if>
+    </where>
+
+    <choose>
+      <when test="sc.sortKey == 'createdAt' and sc.sortValue == 'ASC'">
+        ORDER BY m.created_at ASC
+      </when>
+      <when test="sc.sortKey == 'createdAt' and sc.sortValue == 'DESC'">
+        ORDER BY m.created_at DESC
+      </when>
+      <when test="sc.sortKey == 'name' and sc.sortValue == 'ASC'">
+        ORDER BY m.name ASC
+      </when>
+      <when test="sc.sortKey == 'name' and sc.sortValue == 'DESC'">
+        ORDER BY m.name DESC
+      </when>
+      <otherwise>
+        ORDER BY m.created_at DESC
+      </otherwise>
+    </choose>
+
+    LIMIT #{sc.size}
+    OFFSET #{sc.offset}
+  </select>
+
+
+  <select id="countAllWithAccount" resultType="int">
+    SELECT COUNT(*)
+    FROM members m
+    JOIN members_account a ON m.idx = a.member_idx
+    JOIN roles r ON a.role = r.idx
+
+    <where>
+      <if test="sc.key != null and sc.value != null">
+        <choose>
+          <when test="sc.key == 'id'">
+            a.id LIKE CONCAT('%', #{sc.value}, '%')
+          </when>
+          <when test="sc.key == 'email'">
+            m.email LIKE CONCAT('%', #{sc.value}, '%')
+          </when>
+          <when test="sc.key == 'name'">
+            m.name LIKE CONCAT('%', #{sc.value}, '%')
+          </when>
+          <when test="sc.key == 'role'">
+            r.name = #{sc.value}
+          </when>
+        </choose>
+      </if>
+    </where>
+  </select>
+
+
+  <update id="updateBanStatus">
+    UPDATE members_account
+    SET ban = #{isBanned}
+    WHERE member_idx = #{memberIdx}
+  </update>
+  
+  <update id="membershipUpgrage">
+  	UPDATE `members_account`
+  	SET `role`=3
+  	WHERE `member_idx` = #{memberIdx}
+  </update>
+</mapper>
