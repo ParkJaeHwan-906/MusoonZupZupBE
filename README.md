@@ -63,7 +63,7 @@
 
 - 📐 [Figma 와이어프레임 보기](https://www.figma.com/board/oiNWP1yNI0blErRgM71TmP/musoonzup?node-id=0-1&p=f)  
 - 📊 [ERD 설계도 보기](https://www.erdcloud.com/d/5w4dttMHoGejnFLs9)  
-- 💻 [Frontend GitLab Repo](https://lab.ssafy.com/ssafy_13th_18class/999_final/ssafy_home_final_chunghanseul_parkjaehwan_front)
+- 💻 [Frontend GitHub Repo](https://github.com/ParkJaeHwan-906/MusoonZupZupFE)
 
 ## ⚙️ **설치 및 실행 방법**
 
